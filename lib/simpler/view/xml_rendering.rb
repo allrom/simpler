@@ -1,16 +1,13 @@
 # To change this license header, choose License Headers in Project Properties.
 class XMLRendering
+  include EnvData
 
-  def initialize(env, template)
+  def initialize(env)
     @env = env
-    @template = template
   end
 
-  def erb_init
-    ERB.new(@template)
-  end
-
-  def render(binding)
-    erb_init.result(binding)
+  def file_to_render
+    template_file = "#{template_path}.xml.erb"
+    File.read(template_file) if File.file?(template_file)
   end
 end

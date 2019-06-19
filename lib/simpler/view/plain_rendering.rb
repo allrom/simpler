@@ -1,7 +1,7 @@
 # To change this license header, choose License Headers in Project Properties.
 class PlainRendering
 
-  def initialize(env, _template)
+  def initialize(env)
     @env = env
   end
 

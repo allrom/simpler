@@ -1,20 +1,16 @@
 # This middleware writes formatted web-server output
+require_relative 'simpler_logger'
 
 class HttpLogger
   def initialize(app)
     @app = app
+    @logger = SimplerLogger.new(Simpler.root.join('log/simpler.log'))
   end
 
   def call(env)
     status, headers, body = @app.call(env)
+    @logger.http_info(env)
 
-    File.open(Simpler.root.join('log/simpler.log'), 'a+') do |f|
-      f << "Request: #{env['REQUEST_METHOD']} #{env['PATH_INFO']}#{env['QUERY_STRING']}\n"
-      f << "Handler: #{env['simpler.controller']&.class&.name}\##{env['simpler.action']}\n"
-      f << "Parameters: #{env['simpler.controller']&.request&.params}\n"
-      f << "Response: #{status} #{env['simpler.response_type']} #{env['simpler.template']}\n"
-      f << "----------------------------\n"
-    end
     [status, headers, body]
   end
 end

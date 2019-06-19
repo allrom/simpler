@@ -11,10 +11,11 @@ module Simpler
       @response = Rack::Response.new
     end
 
-    def make_response(action, route_params)
+    def make_response(action)
       @request.env['simpler.controller'] = self
       @request.env['simpler.action'] = action
-      @request.env['simpler.route_params'] = route_params
+
+      params.merge!(@request.env['simpler.route_params'])
 
       set_default_headers unless headers
       set_default_format
@@ -22,6 +23,10 @@ module Simpler
       write_response
 
       @response.finish
+    end
+
+    def params
+      @request.params
     end
 
     private
@@ -48,22 +53,13 @@ module Simpler
       View.new(@request.env).render(binding)
     end
 
-    def params
-      @request.params
-    end
-
-    def route_params
-      @request.env['simpler.route_params']
-    end
-
     def status(code)
       @response.status = code
     end
 
-    def headers(headers = {})
-      headers.each do |header, value|
-        @response.headers[header] = value
-      end
+    def headers(headers = nil)
+      response.headers.merge! headers if headers
+      response.headers
     end
 
     def render(template_set)
