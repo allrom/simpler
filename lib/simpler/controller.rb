@@ -15,11 +15,18 @@ module Simpler
       @request.env['simpler.controller'] = self
       @request.env['simpler.action'] = action
 
-      set_default_headers
+      params.merge!(@request.env['simpler.route_params'])
+
+      set_default_headers unless headers
+      set_default_format
       send(action)
       write_response
 
       @response.finish
+    end
+
+    def params
+      @request.params
     end
 
     private
@@ -32,6 +39,10 @@ module Simpler
       @response['Content-Type'] = 'text/html'
     end
 
+    def set_default_format
+      @request.env['simpler.response_type'] = :html
+    end
+
     def write_response
       body = render_body
 
@@ -42,12 +53,32 @@ module Simpler
       View.new(@request.env).render(binding)
     end
 
-    def params
-      @request.params
+    def status(code)
+      @response.status = code
     end
 
-    def render(template)
-      @request.env['simpler.template'] = template
+    def headers(headers = nil)
+      response.headers.merge! headers if headers
+      response.headers
+    end
+
+    def render(template_set)
+      if template_set.is_a?(Hash)
+        format, template = template_set.first
+
+        request.env['simpler.response_type'] = format
+        case format
+        when :plain
+          response['Content-Type'] = 'text/plain'
+        when :xml
+          response['Content-Type'] = 'text/xml'
+        end
+        request.env['simpler.template'] = template
+      else
+        set_default_format
+        set_default_headers
+        @request.env['simpler.template'] = template_set
+      end
     end
 
   end

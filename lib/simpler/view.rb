@@ -1,39 +1,25 @@
 require 'erb'
 
+require_relative 'view/env_data'
+Dir.glob("./lib/simpler/view/*.rb").each { |file| require file }
+
 module Simpler
   class View
-
-    VIEW_BASE_PATH = 'app/views'.freeze
+    RENDERING_CLASSES = { plain: PlainRendering, html: HTMLRendering, xml: XMLRendering }.freeze
 
     def initialize(env)
       @env = env
     end
 
     def render(binding)
-      template = File.read(template_path)
-
-      ERB.new(template).result(binding)
+      rendering_class = RENDERING_CLASSES[response_type]
+      rendering_class.new(@env).render(binding)
     end
 
     private
 
-    def controller
-      @env['simpler.controller']
+    def response_type
+      @env['simpler.response_type']
     end
-
-    def action
-      @env['simpler.action']
-    end
-
-    def template
-      @env['simpler.template']
-    end
-
-    def template_path
-      path = template || [controller.name, action].join('/')
-
-      Simpler.root.join(VIEW_BASE_PATH, "#{path}.html.erb")
-    end
-
   end
 end
